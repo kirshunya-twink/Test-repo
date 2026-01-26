@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -28,5 +29,7 @@ func Sum(w http.ResponseWriter, r *http.Request) {
 
 	resp := SumResponse{Result: req.A + req.B}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("failed to encode json: %v", err)
+	}
 }
