@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,8 +19,12 @@ func TestSum(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	expected := `{"result":5}`
-	if w.Body.String() != expected {
-		t.Fatalf("expected %s, got %s", expected, w.Body.String())
+	var resp SumResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if resp.Result != 5 {
+		t.Fatalf("expected result 5, got %d", resp.Result)
 	}
 }
