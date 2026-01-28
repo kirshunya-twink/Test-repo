@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func Health(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("ok")); err != nil {
-		log.Printf("failed to write response: %v", err)
-	}
+func Health(c *gin.Context) {
+	c.JSONP(http.StatusOK, gin.H{"status": "live"})
 }
