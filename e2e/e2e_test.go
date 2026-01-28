@@ -3,48 +3,60 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kirshunya-twink/go-ci-playground/internal/handler"
 )
 
 func TestHealthEndpoint(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	gin.SetMode(gin.TestMode)
+
 	w := httptest.NewRecorder()
+	_, r := gin.CreateTestContext(w)
 
-	handler.Health(w, req)
+	r.GET("/health", handler.Health)
 
-	resp := w.Result()
-	body, _ := io.ReadAll(resp.Body)
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	r.ServeHTTP(w, req)
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", resp.StatusCode)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
 	}
 
-	if string(body) != "ok" {
-		t.Fatalf("expected body 'ok', got '%s'", string(body))
+	var response map[string]string
+	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode JSON: %v", err)
+	}
+
+	if response["status"] != "live" {
+		t.Fatalf("expected status 'live', got '%s'", response["status"])
 	}
 }
 
 func TestSumEndpoint(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	_, r := gin.CreateTestContext(w)
+
+	r.POST("/sum", handler.Sum)
+
 	// создаём тело запроса с a=2, b=3
 	body, _ := json.Marshal(map[string]int{"a": 2, "b": 3})
 	req := httptest.NewRequest(http.MethodPost, "/sum", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
-	w := httptest.NewRecorder()
-	handler.Sum(w, req)
+	r.ServeHTTP(w, req)
 
-	resp := w.Result()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", resp.StatusCode)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
 	}
 
 	var result map[string]int
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(w.Body).Decode(&result); err != nil {
 		t.Fatalf("failed to decode JSON: %v", err)
 	}
 

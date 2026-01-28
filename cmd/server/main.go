@@ -2,17 +2,19 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kirshunya-twink/go-ci-playground/internal/handler"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	r := gin.Default()
 
-	mux.HandleFunc("/health", handler.Health)
-	mux.HandleFunc("/sum", handler.Sum)
+	r.GET("/health", handler.Health)
+	r.POST("/sum", handler.Sum)
 
-	log.Println("Server started on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Println("Server starting on :8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal(err)
+	}
 }

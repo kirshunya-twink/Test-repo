@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type SumRequest struct {
@@ -15,21 +15,13 @@ type SumResponse struct {
 	Result int `json:"result"`
 }
 
-func Sum(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
+func Sum(c *gin.Context) {
 	var req SumRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	resp := SumResponse{Result: req.A + req.B}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("failed to encode json: %v", err)
-	}
+	c.JSON(http.StatusOK, resp)
 }
